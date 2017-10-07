@@ -33,7 +33,6 @@ try:
     db = sqlite3.connect(config_data["dbPath"])
     c = db.cursor()
 
-    c.execute
     c.execute('''CREATE TABLE IF NOT EXISTS SpeedTestResults (
                 Timestamp DATETIME PRIMARY KEY,
                 Download DOUBLE,

@@ -1,1 +1,1 @@
-{"dbPath": "~/proof.sqlite3", "resumeFullTestingAt": null, "pingOnly": false}
+{"resumeFullTestingAt": null, "pingOnly": true, "dbPath": "/home/matrumz/proof.sqlite3"}
