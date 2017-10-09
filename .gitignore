@@ -102,3 +102,6 @@ ENV/
 
 # VS Code
 .vscode/
+
+# Ignore config so we don't override users' settings
+blameTheISP.config.json
