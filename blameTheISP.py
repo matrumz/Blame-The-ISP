@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sys
 import speedtest
 import sqlite3
 import json
@@ -47,7 +48,11 @@ class ConfigJson:
 
 def main():
 
-    speed_test_opts = ConfigJson('~/Blame-The-ISP/blameTheISP.config.json')
+    # Probably a better way to do this, but I think this is cron safe.
+    speedtest_dir = os.path.realpath(sys.argv[0])
+    opts_path = '/'.join(speedtest_dir.split('/')[:-1])
+    opts_path += '/blameTheISP.config.json'
+    speed_test_opts = ConfigJson(opts_path)
 
     try:
         # Determine if a full test should be run
