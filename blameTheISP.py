@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import sys
 import speedtest
 import sqlite3
 import json
@@ -19,7 +18,8 @@ class ConfigJson:
             self.data = {}
             self.data['resumeFullTestingAt'] = None
             self.data['pingOnly'] = False
-            self.data['dbPath'] = os.path.expanduser('~') + '/proof.sqlite3'
+            # Allow '~' to be stored in config, this will be expanded later
+            self.data['dbPath'] = os.path.join('~', 'proof.sqlite3')
             self.dump()
 
         # Otherwise, read in the values for the one we have.
@@ -42,16 +42,12 @@ class ConfigJson:
         with open(self.path, 'r') as config_json:
             self.data = json.load(config_json)
 
-    def toggle_ping_only():
-        self.data['pingOnly'] = not self.data['pingOnly']
-
 
 def main():
 
-    # Probably a better way to do this, but I think this is cron safe.
-    speedtest_dir = os.path.realpath(sys.argv[0])
-    opts_path = '/'.join(speedtest_dir.split('/')[:-1])
-    opts_path += '/blameTheISP.config.json'
+    # The config should be a sibling to this module, grab it
+    #research: should we be using __file__ or sys.argv[] ??
+    opts_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'blameTheISP.config.json')
     speed_test_opts = ConfigJson(opts_path)
 
     try:
@@ -68,16 +64,19 @@ def main():
 
         # Execute speed test
         s = speedtest.Speedtest()
-        s.get_best_server()
+        s.get_best_server() # Ping done here
         if not speed_test_opts['pingOnly']:
             s.download()
             s.upload()
         s_result = s.results.dict()
 
-        # Connect to DB, create table if necessary, and record speedtest results
-        db = sqlite3.connect(speed_test_opts['dbPath'])
+        # Connect to DB
+        # Expand ~ paths here, without saving, as users are likely to use that in the config file, and we don't want to overwrite
+        #todo: auto-create db file if it does not exist
+        db = sqlite3.connect(os.path.expanduser(speed_test_opts['dbPath']))
         c = db.cursor()
 
+        # Create results table, if necessary
         c.execute('''CREATE TABLE IF NOT EXISTS SpeedTestResults (
                     Timestamp DATETIME PRIMARY KEY,
                     Download DOUBLE,
@@ -87,9 +86,13 @@ def main():
                     BytesSent UNSIGNED BIG INT
         )''')
         db.commit()
+
+        # Record speed-test results
         c.execute('''INSERT INTO SpeedTestResults VALUES (?,?,?,?,?,?)''', (s_result['timestamp'], s_result['download'], s_result['upload'], s_result['ping'], s_result['bytes_received'], s_result['bytes_sent']))
         db.commit()
+
         db.close()
+
     finally:
         speed_test_opts.dump()
 
