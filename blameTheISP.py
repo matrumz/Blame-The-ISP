@@ -35,7 +35,7 @@ class ConfigJson:
     # Write JSON file to the path specified in __init__
     def dump(self):
         with open(self.path, 'w') as config_json:
-            json.dump(self.data, config_json)
+            json.dump(self.data, config_json, indent=4, sort_keys=True)
 
     # Load JSON file from the path specified in __init__
     def load(self):
